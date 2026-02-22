@@ -94,6 +94,17 @@ Base URL: `https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/`
 
 > The `+` in version strings is URL-encoded as `%2B` in the path.
 
+#### triton 3.5.1 (required by torch 2.9.1 — must install via direct URL, not on PyPI)
+
+| Python | Filename |
+|--------|----------|
+| cp310  | `triton-3.5.1%2Brocm7.1.0.gita272dfa8-cp310-cp310-linux_x86_64.whl` |
+| cp311  | `triton-3.5.1%2Brocm7.1.0.gita272dfa8-cp311-cp311-linux_x86_64.whl` |
+| cp312  | `triton-3.5.1%2Brocm7.1.0.gita272dfa8-cp312-cp312-linux_x86_64.whl` |
+| cp313  | `triton-3.5.1%2Brocm7.1.0.gita272dfa8-cp313-cp313-linux_x86_64.whl` |
+
+Also available in this repo: triton 3.2.0, 3.3.1, 3.4.0 (paired with older torch versions).
+
 #### torch 2.9.1 (latest for ROCm 7.1 — cp310 only, no cp39)
 
 | Python | Filename |
@@ -133,6 +144,9 @@ Base URL: `https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/`
 
 ### Install Commands (Direct URL — ROCm 7.1)
 
+> **Key rule**: List `triton` BEFORE `torch` in the same pip command so pip satisfies
+> torch's triton dependency from the direct URL instead of trying PyPI (where it will fail).
+
 Substitute `{PY}` with your CPython tag (cp310, cp311, cp312, cp313):
 
 ```bash
@@ -140,6 +154,7 @@ BASE=https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1
 PY=cp310  # change to match your Python version
 
 pip install \
+  "${BASE}/triton-3.5.1%2Brocm7.1.0.gita272dfa8-${PY}-${PY}-linux_x86_64.whl" \
   "${BASE}/torch-2.9.1%2Brocm7.1.0.lw.git351ff442-${PY}-${PY}-linux_x86_64.whl" \
   "${BASE}/torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-${PY}-${PY}-linux_x86_64.whl" \
   "${BASE}/torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-${PY}-${PY}-linux_x86_64.whl"
@@ -148,6 +163,7 @@ pip install \
 **Full example for Python 3.10 (cp310):**
 ```bash
 pip install \
+  "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/triton-3.5.1%2Brocm7.1.0.gita272dfa8-cp310-cp310-linux_x86_64.whl" \
   "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/torch-2.9.1%2Brocm7.1.0.lw.git351ff442-cp310-cp310-linux_x86_64.whl" \
   "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-cp310-cp310-linux_x86_64.whl" \
   "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-cp310-cp310-linux_x86_64.whl"
@@ -225,8 +241,9 @@ export HIP_VISIBLE_DEVICES=0
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
 
 # Recommended performance flags for Strix Halo (unified memory)
-export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
-export PYTORCH_NO_CUDA_MEMORY_CACHING=1
+# torch ≤ 2.8: use PYTORCH_HIP_ALLOC_CONF
+# torch ≥ 2.9: use PYTORCH_ALLOC_CONF (HIP variant deprecated)
+export PYTORCH_ALLOC_CONF=expandable_segments:True
 ```
 
 > Note: `HSA_OVERRIDE_GFX_VERSION=11.0.0` is a workaround for wheels that don't include gfx1151 kernels.
@@ -274,6 +291,7 @@ Community wheels: `https://github.com/scottt/rocm-TheRock/releases`
 
 | Error | Cause | Fix |
 |---|---|---|
+| `Could not find a version that satisfies triton==X.Y.Z+rocmX.Y.Z...` | torch depends on a ROCm-specific triton not on PyPI | Install triton from the AMD repo direct URL **before** torch in the same pip command |
 | `invalid device function` | Wheel has no gfx1151 kernels | Switch to community wheels or set `HSA_OVERRIDE_GFX_VERSION=11.0.0` |
 | `No GPU found` / `device_count() == 0` | `CUDA_VISIBLE_DEVICES=""` set | Run `unset CUDA_VISIBLE_DEVICES && export HIP_VISIBLE_DEVICES=0` |
 | Wrong torch installed over gfx1151 wheel | Another package pulled in CUDA torch | Pin torch in requirements and install community wheel last |
