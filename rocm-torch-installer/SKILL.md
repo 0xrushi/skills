@@ -74,65 +74,95 @@ Parse the output to determine:
 
 ## Step 3A: Official AMD Repo Wheels (ROCm 7.0+)
 
-### Available Version Matrix (Official AMD repo)
+> **IMPORTANT**: The AMD repo (`repo.radeon.com/rocm/manylinux/`) is a **plain file directory**, NOT a PEP 503 package index.
+> `pip install --index-url` and `--extra-index-url` will NOT work. You must install via **direct wheel URLs**.
 
-#### ROCm 7.2 (Latest — `https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/`)
+### How to Find the Exact Filename
 
-| Package     | Version         | Python Tags                    |
-|-------------|-----------------|--------------------------------|
-| torch       | 2.7.1+rocm7.2.0 | cp39, cp310, cp311, cp312, cp313 |
-| torch       | 2.8.0+rocm7.2.0 | cp310, cp311, cp312, cp313     |
-| torch       | 2.9.1+rocm7.2.0 | cp310, cp311, cp312, cp313     |
-| torchaudio  | 2.7.1+rocm7.2.0 | cp310, cp311, cp312, cp313     |
-| torchaudio  | 2.8.0+rocm7.2.0 | cp310, cp311, cp312, cp313     |
-| torchaudio  | 2.9.0+rocm7.2.0 | cp310, cp311, cp312, cp313     |
-| torchvision | 0.22.1+rocm7.2.0| cp310, cp311, cp312, cp313     |
-| torchvision | 0.23.0+rocm7.2.0| cp310, cp311, cp312, cp313     |
-| torchvision | 0.24.0+rocm7.2.0| cp310, cp311, cp312, cp313     |
-
-#### ROCm 7.1 (`https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/`)
-
-| Package     | Versions Available                              | Python Tags                      |
-|-------------|-------------------------------------------------|----------------------------------|
-| torch       | 2.6.0, 2.7.1, 2.8.0, 2.9.1                    | cp39–cp313 (cp39 for ≤2.8.0)    |
-| torchaudio  | 2.6.0, 2.7.1, 2.8.0, 2.9.0                    | cp39–cp313                       |
-| torchvision | 0.21.0, 0.22.1, 0.23.0, 0.24.0                | cp39–cp313                       |
-
-#### ROCm 6.4.1 (`https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.1/`)
-
-| Package     | Versions Available                              | Python Tags                     |
-|-------------|-------------------------------------------------|---------------------------------|
-| torch       | 2.3.0, 2.4.1, 2.5.1, 2.6.0, 2.7.1            | cp39, cp310, cp311, cp312, cp313|
-| torchaudio  | 2.3.0, 2.4.0, 2.5.0, 2.6.0, 2.7.1            | cp39, cp310, cp311, cp312, cp313|
-| torchvision | 0.18.0, 0.19.0, 0.20.1, 0.21.0, 0.22.1       | cp39, cp310, cp311, cp312, cp313|
-
-### Install Command (Official AMD repo)
-
-Replace `{ROCM_REL}` with e.g. `7.2`, and use the latest torch version for that release:
+Each wheel filename embeds a git hash that changes per build. Use this command to look up what's available:
 
 ```bash
-# Recommended: use --extra-index-url to let pip resolve filenames automatically
-pip install torch torchvision torchaudio \
-  --extra-index-url https://repo.radeon.com/rocm/manylinux/rocm-rel-{ROCM_REL}/
-
-# Example for ROCm 7.2, Python 3.11 (latest torch):
-pip install torch==2.9.1 torchvision==0.24.0 torchaudio==2.9.0 \
-  --extra-index-url https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2/
-
-# Example for ROCm 7.1, Python 3.12:
-pip install torch==2.9.1 torchvision==0.24.0 torchaudio==2.9.0 \
-  --extra-index-url https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/
-
-# Example for ROCm 6.4.1, Python 3.10 (legacy project compatibility):
-pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 \
-  --extra-index-url https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.1/
+# List all torch-related wheels for a given ROCm release:
+curl -s https://repo.radeon.com/rocm/manylinux/rocm-rel-{ROCM_REL}/ \
+  | grep -oP 'href="[^"]*\.whl"' | sed 's/href="//;s/"//' \
+  | grep -E "^torch|^torchaudio|^torchvision"
 ```
 
-To install a **specific wheel by direct URL** (when you need a pinned git hash), look up the filename from the index:
+### Verified Wheel Filenames — ROCm 7.1
+
+Base URL: `https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/`
+
+> The `+` in version strings is URL-encoded as `%2B` in the path.
+
+#### torch 2.9.1 (latest for ROCm 7.1 — cp310 only, no cp39)
+
+| Python | Filename |
+|--------|----------|
+| cp310  | `torch-2.9.1%2Brocm7.1.0.lw.git351ff442-cp310-cp310-linux_x86_64.whl` |
+| cp311  | `torch-2.9.1%2Brocm7.1.0.lw.git351ff442-cp311-cp311-linux_x86_64.whl` |
+| cp312  | `torch-2.9.1%2Brocm7.1.0.lw.git351ff442-cp312-cp312-linux_x86_64.whl` |
+| cp313  | `torch-2.9.1%2Brocm7.1.0.lw.git351ff442-cp313-cp313-linux_x86_64.whl` |
+
+#### torch 2.7.1 (stable, includes cp39)
+
+| Python | Filename |
+|--------|----------|
+| cp39   | `torch-2.7.1%2Brocm7.1.0.lw.git4b0d5f80-cp39-cp39-linux_x86_64.whl` |
+| cp310  | `torch-2.7.1%2Brocm7.1.0.lw.git4b0d5f80-cp310-cp310-linux_x86_64.whl` |
+| cp311  | `torch-2.7.1%2Brocm7.1.0.lw.git4b0d5f80-cp311-cp311-linux_x86_64.whl` |
+| cp312  | `torch-2.7.1%2Brocm7.1.0.lw.git4b0d5f80-cp312-cp312-linux_x86_64.whl` |
+| cp313  | `torch-2.7.1%2Brocm7.1.0.lw.git4b0d5f80-cp313-cp313-linux_x86_64.whl` |
+
+#### torchaudio 2.9.0 (matches torch 2.9.1)
+
+| Python | Filename |
+|--------|----------|
+| cp310  | `torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-cp310-cp310-linux_x86_64.whl` |
+| cp311  | `torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-cp311-cp311-linux_x86_64.whl` |
+| cp312  | `torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-cp312-cp312-linux_x86_64.whl` |
+| cp313  | `torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-cp313-cp313-linux_x86_64.whl` |
+
+#### torchvision 0.24.0 (matches torch 2.9.1)
+
+| Python | Filename |
+|--------|----------|
+| cp310  | `torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-cp310-cp310-linux_x86_64.whl` |
+| cp311  | `torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-cp311-cp311-linux_x86_64.whl` |
+| cp312  | `torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-cp312-cp312-linux_x86_64.whl` |
+| cp313  | `torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-cp313-cp313-linux_x86_64.whl` |
+
+### Install Commands (Direct URL — ROCm 7.1)
+
+Substitute `{PY}` with your CPython tag (cp310, cp311, cp312, cp313):
+
 ```bash
-# Browse available wheels (returns HTML directory listing)
-curl -s https://repo.radeon.com/rocm/manylinux/rocm-rel-{ROCM_REL}/ | grep -oP 'href="[^"]*\.whl"' | sed 's/href="//;s/"//' | grep torch
+BASE=https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1
+PY=cp310  # change to match your Python version
+
+pip install \
+  "${BASE}/torch-2.9.1%2Brocm7.1.0.lw.git351ff442-${PY}-${PY}-linux_x86_64.whl" \
+  "${BASE}/torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-${PY}-${PY}-linux_x86_64.whl" \
+  "${BASE}/torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-${PY}-${PY}-linux_x86_64.whl"
 ```
+
+**Full example for Python 3.10 (cp310):**
+```bash
+pip install \
+  "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/torch-2.9.1%2Brocm7.1.0.lw.git351ff442-cp310-cp310-linux_x86_64.whl" \
+  "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/torchvision-0.24.0%2Brocm7.1.0.gitb919bd0c-cp310-cp310-linux_x86_64.whl" \
+  "https://repo.radeon.com/rocm/manylinux/rocm-rel-7.1/torchaudio-2.9.0%2Brocm7.1.0.gite3c6ee2b-cp310-cp310-linux_x86_64.whl"
+```
+
+### Available Version Summary per ROCm Release
+
+| ROCm | torch | torchvision | torchaudio | Python Tags |
+|------|-------|-------------|------------|-------------|
+| 7.2  | 2.6.0, 2.7.1, 2.8.0, 2.9.1 | 0.21.0–0.24.0 | 2.6.0–2.9.0 | cp39–cp313 |
+| 7.1  | 2.6.0, 2.7.1, 2.8.0, 2.9.1 | 0.21.0–0.24.0 | 2.6.0–2.9.0 | cp39–cp313 (cp39 missing for 2.9.1) |
+| 7.0  | 2.6.0, 2.7.1 | 0.21.0, 0.22.1 | 2.6.0, 2.7.1 | cp39–cp312 |
+| 6.4.1| 2.3.0–2.7.1 | 0.18.0–0.22.1 | 2.3.0–2.7.1 | cp39–cp313 |
+| 6.3  | 2.3.0–2.6.0 | 0.18.0–0.21.0 | 2.3.0–2.6.0 | cp39–cp312 |
+| 6.2  | 2.3.0–2.5.1 | 0.18.0–0.20.1 | 2.3.0–2.5.0 | cp39–cp312 |
 
 ---
 
