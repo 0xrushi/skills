@@ -126,6 +126,41 @@ print(f"Tensor on GPU:  {x.device}")
 
 ---
 
+## GGUF Support
+
+To enable GGUF model loading in vLLM, install the plugin:
+
+```bash
+uv add vllm-gguf-plugin
+```
+
+### Serving a GGUF Model
+
+GGUF repos on HuggingFace use the format `owner/repo:quantization` (e.g. `:Q4_K_M`). You must also point vLLM at the original model for its config and tokenizer:
+
+```bash
+uv run -- vllm serve \
+    "owner/model-name-GGUF:Q4_K_M" \
+    --hf-config-path "owner/model-name" \
+    --tokenizer "owner/model-name" \
+    --dtype float16 \
+    --gpu-memory-utilization 0.88 \
+    --max-model-len 32768 \
+    --served-model-name "model-name-Q4_K_M"
+```
+
+- `"owner/model-name-GGUF:Q4_K_M"` — the GGUF repo and quant level to load
+- `--hf-config-path` — the original (non-GGUF) repo, needed for `config.json`
+- `--tokenizer` — the original repo's tokenizer
+- `--dtype float16` — use float16 precision; Blackwell GPUs also support `bfloat16` (default) or `float32`
+- `--gpu-memory-utilization 0.88` — fraction of VRAM to use for weights + KV cache (default 0.90); lower if KV cache allocation fails
+- `--max-model-len 32768` — cap the context window; some models declare enormous defaults (e.g. 262144) that exhaust VRAM on KV cache allocation even on 32 GB cards; 32768 is a practical cap for most single-GPU setups
+- `--served-model-name` — alias used in the OpenAI-compatible API responses
+
+> The `NCCL destroy_process_group` warning printed after a failed startup is cleanup noise — not the root cause.
+
+---
+
 ## Full One-Shot Install (fresh project)
 
 ```bash
@@ -135,7 +170,7 @@ print(f"Tensor on GPU:  {x.device}")
 UV_TORCH_BACKEND=cu128 uv add \
   torch torchvision torchaudio \
   nvidia-cusparselt-cu12 nvidia-nvshmem-cu12 \
-  vllm \
+  vllm vllm-gguf-plugin \
   --prerelease=allow \
   --index-strategy unsafe-best-match
 
