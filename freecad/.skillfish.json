@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "freecad",
+  "owner": "vamseeachanta",
+  "repo": "digitalmodel",
+  "path": ".claude/skills/engineering/freecad-agents/freecad",
+  "branch": "main",
+  "sha": "442396ff2a31659cc773642ee156a290d8dcbb65",
+  "source": "manual"
+}
